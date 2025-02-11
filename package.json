@@ -1,0 +1,23 @@
+{
+  "name": "link-checker-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "main": "node main.js",
+    "reload-commands": "node deploy-commands.js",
+    "rc": "node deploy-commands.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.7",
+    "pocketbase": "^0.25.1"
+  },
+  "devDependencies": {
+    "eslint": "^9.16.0"
+  }
+}
