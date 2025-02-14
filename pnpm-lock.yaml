@@ -14,9 +14,6 @@ importers:
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
-      pocketbase:
-        specifier: ^0.25.1
-        version: 0.25.1
     devDependencies:
       eslint:
         specifier: ^9.16.0
@@ -384,9 +381,6 @@ packages:
   path-key@3.1.1:
     resolution: {integrity: sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==}
     engines: {node: '>=8'}
-
-  pocketbase@0.25.1:
-    resolution: {integrity: sha512-2IH0KLI/qMNR/E17C7BGWX2FxW7Tead+igLHOWZ45P56v/NyVT18Jnmddeft+3qWWGL1Hog2F8bc4orWV/+Fcg==}
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -844,8 +838,6 @@ snapshots:
   path-exists@4.0.0: {}
 
   path-key@3.1.1: {}
-
-  pocketbase@0.25.1: {}
 
   prelude-ls@1.2.1: {}
 

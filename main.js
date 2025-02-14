@@ -3,33 +3,31 @@ import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import "dotenv/config";
 
-// ---
-
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
 });
 client.commands = new Collection();
 
-const foldersPath = join(process.cwd(), "commands");
-const commandFolders = readdirSync(foldersPath);
+(async () => {
+  const foldersPath = join(process.cwd(), "commands");
+  const commandFolders = readdirSync(foldersPath);
 
-for (const folder of commandFolders) {
-  const commandsPath = join(foldersPath, folder);
-  const commandFiles = readdirSync(commandsPath).filter((file) => file.endsWith(".js"));
+  for (const folder of commandFolders) {
+    const commandsPath = join(foldersPath, folder);
+    const commandFiles = readdirSync(commandsPath).filter((file) => file.endsWith(".js"));
 
-  for (const file of commandFiles) {
-    const filePath = join(commandsPath, file);
-    const { default: command } = import(filePath);
+    for (const file of commandFiles) {
+      const filePath = join(commandsPath, file);
+      const commandModule = await import(filePath);
 
-    if ("data" in command && "execute" in command) {
-      client.commands.set(command.data.name, command);
-    } else {
-      console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+      if ("data" in commandModule && "execute" in commandModule) {
+        client.commands.set(commandModule.data.name, commandModule);
+      } else {
+        console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+      }
     }
   }
-}
-
-// ---
+})();
 
 client.once(Events.ClientReady, (readyClient) => {
   console.log(`Ready! Logged in as ${readyClient.user.tag}`);
@@ -41,7 +39,7 @@ client.on(Events.MessageCreate, async (message) => {
   const links = message.content.match(
     /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g
   );
-  if (links == 0) return;
+  if (links === null) return;
 
   links.forEach(async (link) => await message.channel.send(link));
 });
