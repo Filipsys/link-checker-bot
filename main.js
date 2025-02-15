@@ -41,7 +41,18 @@ client.on(Events.MessageCreate, async (message) => {
   );
   if (links === null) return;
 
-  links.forEach(async (link) => await message.channel.send(link));
+  const createEmbed = (link) =>
+    new EmbedBuilder()
+      .setTitle("⚠️ Suspicious link flagged")
+      .setDescription(
+        `Google Safe Browsing has flagged this link as suspicious.\n\`\`\`${link}\`\`\`\n\n**Read more about susicious links here**:\n- [Social Engineering](https://developers.google.com/search/docs/monitor-debug/security/social-engineering)\n- [Malware and Unwanted Software](https://developers.google.com/search/docs/monitor-debug/security/malware)`
+      )
+      .setTimestamp()
+      .setFooter({
+        text: "Note: This can not guarantee error-free results, the results may vary.",
+      });
+
+  links.forEach(async (link) => await message.channel.send({ embeds: [createEmbed(link)] }));
 });
 
 // client.on(Events.InteractionCreate, async (interaction) => {
