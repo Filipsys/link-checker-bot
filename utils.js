@@ -8,7 +8,7 @@ export const removeEscapeCharacters = (url) => {
 
   return url
     .split("")
-    .filter((char) => !unwantedCharacters.includes(char))
+    .filter((char) => !unwantedCharacters.includes(parseInt(`0x${char.charCodeAt(0).toString(16).padStart(2, 0)}`, 16)))
     .join("");
 };
 
