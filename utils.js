@@ -18,9 +18,9 @@ export const removeEscapeCharacters = (url) => {
  * @description Returns the url with the removed fragment, else, returns the url.
  */
 export const removeURLFragment = (url) => {
-  if (url.indexOf("#") === -1) return url.slice(0, url.indexOf("#") - 1);
+  if (url.indexOf("#") === -1) return url;
 
-  return url;
+  return url.slice(0, url.indexOf("#"));
 };
 
 /**
@@ -29,7 +29,7 @@ export const removeURLFragment = (url) => {
  * @description Returns the url with decoded percent sequences, else, returns the url.
  * @example "http://example.com/f%20o%20o" -> "http://example.com/f+o+o"
  */
-export const removePercentEscapeSequences = (url) => decodeURI(url) || url;
+export const removePercentEscapeSequences = (url) => decodeURI(url).replaceAll(" ", "+") || url;
 
 /**
  * @param {string} url
@@ -49,22 +49,22 @@ export const removeTrailingLeadingDots = (url) => {
  * @description Returns the url with all consecutive dots replaced with single dots.
  */
 export const removeConsecutiveDots = (url) => {
-  let stack = [];
-  let replacedString = url;
+  let dotChain = 0;
+  let dotChainIndex = null;
 
   url.split("").forEach((char, index) => {
     if (char === ".") {
-      stack.push(index);
+      if (dotChainIndex === null) dotChainIndex = index;
+      dotChain++;
     } else {
-      if (stack.length > 1) {
-        replacedString = url.slice(0, stack[0]) + url.slice(stack.length - 1, url.length - 1);
-      } else {
-        stack = [];
-      }
+      url = url.slice(0, dotChainIndex) + url.slice(dotChainIndex + dotChain, url.length);
+
+      dotChain = 0;
+      dotChainIndex = null;
     }
   });
 
-  return replacedString;
+  return url;
 };
 
 /**
@@ -96,8 +96,8 @@ export const canonicalizeURL = (url) => {
   url = removeEscapeCharacters(url);
   url = removeURLFragment(url);
   url = removePercentEscapeSequences(url);
-  url = removeTrailingLeadingDots(url);
   url = removeConsecutiveDots(url);
+  url = removeTrailingLeadingDots(url);
   url = removeLeadingZeroesIPv6(url);
 
   return url;
