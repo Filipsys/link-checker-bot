@@ -2,6 +2,7 @@ import { writeFile, readFile } from "fs/promises";
 import { join } from "path";
 
 const suffixPath = join(process.cwd(), "data/suffixList.txt");
+const indexedSuffixPath = join(process.cwd(), "data/indexedSuffixList.txt");
 
 /**
  * @param {string} url
@@ -161,11 +162,39 @@ export const saveLatestPublicSuffixList = async () => {
 
 export const formatSavedList = async () => {
   const contents = await readFile(suffixPath, { encoding: "utf-8" });
+  const lettersCodeMin = 97;
+  const lettersCodeMax = 122;
 
   const formattedContent = contents
     .split("\n")
-    .filter((line) => !line.startsWith("/") && line.trim() !== "")
+    .filter(
+      (line) =>
+        !line.startsWith("/") &&
+        line.trim() !== "" &&
+        line.split("").every((char) => {
+          return (
+            (char.charCodeAt() >= lettersCodeMin && char.charCodeAt() <= lettersCodeMax) || char.charCodeAt() === 46
+          );
+        })
+    )
     .join("\n");
 
   await writeFile(suffixPath, formattedContent).catch((error) => console.log("Error encountered: ", error));
+};
+
+export const indexSavedList = async () => {
+  const contents = await readFile(suffixPath, { encoding: "utf-8" });
+
+  const indexedResults = {};
+  "abcdefghijklmnopqrstuvwxyz".split("").forEach((value) => (indexedResults[value] = []));
+
+  contents.split("\n").forEach((suffix) => {
+    const lastSuffix = suffix[suffix.length - 1];
+
+    indexedResults[lastSuffix] = [...indexedResults[lastSuffix], suffix];
+  });
+
+  await writeFile(indexedSuffixPath, JSON.stringify(indexedResults)).catch((error) =>
+    console.log("Error encountered: ", error)
+  );
 };

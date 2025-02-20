@@ -1,5 +1,5 @@
 import { Client, Collection, Events, GatewayIntentBits, EmbedBuilder } from "discord.js";
-import { formatSavedList, saveLatestPublicSuffixList } from "./utils.js";
+import { formatSavedList, indexSavedList, saveLatestPublicSuffixList } from "./utils.js";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import "dotenv/config";
@@ -51,6 +51,12 @@ client.on(Events.MessageCreate, async (message) => {
 
   if (message.content === "%%format") {
     await formatSavedList();
+  }
+
+  if (message.content === "%%index") {
+    const response = await indexSavedList();
+
+    await message.channel.send("Done");
   }
 
   const links = message.content.match(
