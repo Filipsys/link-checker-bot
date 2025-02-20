@@ -1,4 +1,5 @@
 import { Client, Collection, Events, GatewayIntentBits, EmbedBuilder } from "discord.js";
+import { formatSavedList, saveLatestPublicSuffixList } from "./utils.js";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import "dotenv/config";
@@ -35,6 +36,22 @@ client.once(Events.ClientReady, (readyClient) => {
 
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
+
+  if (message.content === "%%get") {
+    // await saveLatestPublicSuffixList()
+    //   .then(async () => {
+    //     await message.channel.send("Saved suffixes to file.");
+    //   })
+    //   .catch(async (error) => {
+    //     await message.channel.send(`Encountered an error: ${error}`);
+    //   });
+
+    return;
+  }
+
+  if (message.content === "%%format") {
+    await formatSavedList();
+  }
 
   const links = message.content.match(
     /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g

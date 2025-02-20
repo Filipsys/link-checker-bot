@@ -1,3 +1,8 @@
+import { writeFile, readFile } from "fs/promises";
+import { join } from "path";
+
+const suffixPath = join(process.cwd(), "data/suffixList.txt");
+
 /**
  * @param {string} url
  * @returns {string}
@@ -101,4 +106,66 @@ export const canonicalizeURL = (url) => {
   url = removeLeadingZeroesIPv6(url);
 
   return url;
+};
+
+/**
+ * @param {string} url
+ * @returns {string[]}
+ */
+export const URLCombinations = (url) => {
+  const URISchemes = ["file", "ftp", "http", "https", "imap", "irc", "nntp", "acap", "icap", "mtqp", "wss"];
+  const unofficialURISchemes = [
+    "admin",
+    "app",
+    "freeplane",
+    "geo",
+    "javascript",
+    "jdbc",
+    "msteams",
+    "ms-access",
+    "ms-excel",
+    "ms-infopath",
+    "ms-powerpoint",
+    "ms-project",
+    "ms-publisher",
+    "ms-spd",
+    "ms-visio",
+    "ms-word",
+    "odbc",
+    "psns",
+    "rdar",
+    "s3",
+    "shortcuts",
+    "slack",
+    "stratum",
+    "trueconf",
+    "viber",
+    "web+",
+    "zoommtg",
+    "zoomus",
+  ];
+  const urlCombinationLimit = 30;
+  const urlParts = [];
+
+  return url;
+};
+
+export const saveLatestPublicSuffixList = async () => {
+  fetch("https://publicsuffix.org/list/public_suffix_list.dat")
+    .then(async (response) => response.text())
+    .then(async (response) => {
+      await writeFile(suffixPath, response);
+    })
+    .catch((error) => console.error("Error encountered: ", error));
+};
+
+export const formatSavedList = async () => {
+  const contents = await readFile(suffixPath, { encoding: "utf-8" });
+
+  const formattedContent = contents
+    .split("\n")
+    .filter((line) => !line.startsWith("/") && line.trim() !== "")
+    .join("\n");
+
+  await writeFile(suffixPath, formattedContent).catch((error) => console.log("Error encountered: ", error));
 };
