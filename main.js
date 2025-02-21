@@ -1,5 +1,5 @@
 import { Client, Collection, Events, GatewayIntentBits, EmbedBuilder } from "discord.js";
-import { formatSavedList, indexSavedList, saveLatestPublicSuffixList } from "./utils.js";
+import { formatSavedList, indexSavedList, saveLatestPublicSuffixList, URLCombinations } from "./utils.js";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import "dotenv/config";
@@ -62,6 +62,11 @@ client.on(Events.MessageCreate, async (message) => {
   const links = message.content.match(
     /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g
   );
+
+  if (message.content.startsWith("%%combinations")) {
+    URLCombinations(links[0]);
+  }
+
   if (links === null) return;
 
   const createEmbed = (link) =>

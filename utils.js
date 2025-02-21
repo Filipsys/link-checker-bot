@@ -113,7 +113,7 @@ export const canonicalizeURL = (url) => {
  * @param {string} url
  * @returns {string[]}
  */
-export const URLCombinations = (url) => {
+export const URLCombinations = async (url) => {
   const URISchemes = ["file", "ftp", "http", "https", "imap", "irc", "nntp", "acap", "icap", "mtqp", "wss"];
   const unofficialURISchemes = [
     "admin",
@@ -146,7 +146,59 @@ export const URLCombinations = (url) => {
     "zoomus",
   ];
   const urlCombinationLimit = 30;
-  const urlParts = [];
+  const urlCombinations = [];
+  const urlParts = {
+    URIScheme: "",
+    hostSuffixes: [],
+    hostTLD: "",
+    eTLD: "",
+    pathPrefixes: [],
+  };
+
+  const urlWithoutPaths = urlWithoutScheme.split("/")[0];
+  const urlSuffixList = urlWithoutPaths.split(".");
+
+  // Check for URI schemes
+  URISchemes.forEach((scheme) => {
+    if (url.includes(scheme + "://")) urlParts.URIScheme = scheme;
+  });
+
+  unofficialURISchemes.forEach((scheme) => {
+    if (url.includes(scheme + "://")) urlParts.URIScheme = scheme;
+  });
+
+  // Get the eTLD
+  const fileContent = await readFile(indexedSuffixPath).then((response) => JSON.parse(response));
+  const desiredIndexList = fileContent[urlWithoutPaths[urlWithoutPaths.length - 1]];
+
+  for (let i = 0; i < urlSuffixList.length; i++) {
+    let suffixCheck = "";
+
+    for (let j = i; j < urlSuffixList.length; j++) {
+      suffixCheck += urlSuffixList[j] + (j < urlSuffixList.length - 1 ? "." : "");
+    }
+
+    if (desiredIndexList.includes(suffixCheck)) {
+      urlParts.eTLD = suffixCheck;
+      break;
+    }
+  }
+
+  // Get the host TLD (domain)
+  const hostTLDLocation = urlSuffixList.length - 1 - urlParts.eTLD.split(".").length;
+  urlParts.hostTLD = urlSuffixList[hostTLDLocation];
+
+  // Add the path prefixes
+  const urlWithoutScheme = url.split(urlParts.URIScheme + "://")[1];
+  urlWithoutScheme
+    .split("/")
+    .slice(1)
+    .forEach((prefix) => (urlParts.pathPrefixes = [...urlParts.pathPrefixes, prefix]));
+
+  // Add the host suffixes
+  urlParts.hostSuffixes = urlWithoutScheme.split(".").slice(0, hostTLDLocation);
+
+  console.log(urlParts);
 
   return url;
 };
@@ -156,6 +208,9 @@ export const saveLatestPublicSuffixList = async () => {
     .then(async (response) => response.text())
     .then(async (response) => {
       await writeFile(suffixPath, response);
+
+      await formatSavedList();
+      await indexSavedList();
     })
     .catch((error) => console.error("Error encountered: ", error));
 };

@@ -1,5 +1,5 @@
 node_modules
 .env
 .DS_Store
-# data/suffixList.txt
-# data/indexedSuffixList.txt
+data/suffixList.txt
+data/indexedSuffixList.txt
