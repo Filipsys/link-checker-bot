@@ -1,8 +1,30 @@
 import { writeFile, readFile } from "fs/promises";
-import { join } from "path";
+import { URISchemes, unofficialURISchemes, suffixPath, indexedSuffixPath } from "./variables.js";
 
-const suffixPath = join(process.cwd(), "data/suffixList.txt");
-const indexedSuffixPath = join(process.cwd(), "data/indexedSuffixList.txt");
+/**
+ * @param {string} url
+ * @returns {{
+ *   "4bit": string,
+ *   "8bit": string,
+ *   "16bit": string
+ * }}
+ * @description Returns the hashed first 4-bit, 8-bit & 16-bit values using SHA-256.
+ */
+export const hashURL = async (url) => {
+  const utf8encoder = new TextEncoder();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", utf8encoder.encode(url));
+  const hash = Array.from(new Uint8Array(hashBuffer))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+
+  console.log(hash);
+
+  return {
+    "4bit": hash.slice(-4),
+    "8bit": hash.slice(-8),
+    "16bit": hash.slice(-16),
+  };
+};
 
 /**
  * @param {string} url
@@ -114,40 +136,9 @@ export const canonicalizeURL = (url) => {
  * @returns {string[]}
  */
 export const URLCombinations = async (url) => {
-  const URISchemes = ["file", "ftp", "http", "https", "imap", "irc", "nntp", "acap", "icap", "mtqp", "wss"];
-  const unofficialURISchemes = [
-    "admin",
-    "app",
-    "freeplane",
-    "geo",
-    "javascript",
-    "jdbc",
-    "msteams",
-    "ms-access",
-    "ms-excel",
-    "ms-infopath",
-    "ms-powerpoint",
-    "ms-project",
-    "ms-publisher",
-    "ms-spd",
-    "ms-visio",
-    "ms-word",
-    "odbc",
-    "psns",
-    "rdar",
-    "s3",
-    "shortcuts",
-    "slack",
-    "stratum",
-    "trueconf",
-    "viber",
-    "web+",
-    "zoommtg",
-    "zoomus",
-  ];
-  const urlCombinationLimit = 30;
   const urlCombinations = [];
   const urlParts = {
+    isIPv4: false,
     URIScheme: "",
     hostSuffixes: [],
     hostTLD: "",
@@ -155,7 +146,16 @@ export const URLCombinations = async (url) => {
     pathPrefixes: [],
   };
 
+  const urlWithoutScheme = url.split(urlParts.URIScheme + "://")[1];
   const urlWithoutPaths = urlWithoutScheme.split("/")[0];
+
+  // Check if URL is an IPv4
+  const IPv4Check = urlWithoutPaths.search(/\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}/g);
+  if (IPv4Check !== -1) {
+    urlParts.isIPv4 = true;
+    urlParts.hostTLD = urlWithoutPaths.slice(-IPv4Check);
+  }
+
   const urlSuffixList = urlWithoutPaths.split(".");
 
   // Check for URI schemes
@@ -168,37 +168,54 @@ export const URLCombinations = async (url) => {
   });
 
   // Get the eTLD
-  const fileContent = await readFile(indexedSuffixPath).then((response) => JSON.parse(response));
-  const desiredIndexList = fileContent[urlWithoutPaths[urlWithoutPaths.length - 1]];
+  if (!urlParts.isIPv4) {
+    const fileContent = await readFile(indexedSuffixPath).then((response) => JSON.parse(response));
+    const desiredIndexList = fileContent[urlWithoutPaths[urlWithoutPaths.length - 1]];
 
-  for (let i = 0; i < urlSuffixList.length; i++) {
-    let suffixCheck = "";
+    for (let i = 0; i < urlSuffixList.length; i++) {
+      let suffixCheck = "";
 
-    for (let j = i; j < urlSuffixList.length; j++) {
-      suffixCheck += urlSuffixList[j] + (j < urlSuffixList.length - 1 ? "." : "");
-    }
+      for (let j = i; j < urlSuffixList.length; j++) {
+        suffixCheck += urlSuffixList[j] + (j < urlSuffixList.length - 1 ? "." : "");
+      }
 
-    if (desiredIndexList.includes(suffixCheck)) {
-      urlParts.eTLD = suffixCheck;
-      break;
+      if (desiredIndexList.includes(suffixCheck)) {
+        urlParts.eTLD = suffixCheck;
+        break;
+      }
     }
   }
 
   // Get the host TLD (domain)
   const hostTLDLocation = urlSuffixList.length - 1 - urlParts.eTLD.split(".").length;
-  urlParts.hostTLD = urlSuffixList[hostTLDLocation];
+  if (!urlParts.isIPv4) urlParts.hostTLD = urlSuffixList[hostTLDLocation];
 
   // Add the path prefixes
-  const urlWithoutScheme = url.split(urlParts.URIScheme + "://")[1];
-  urlWithoutScheme
-    .split("/")
-    .slice(1)
-    .forEach((prefix) => (urlParts.pathPrefixes = [...urlParts.pathPrefixes, prefix]));
+  const urlPaths = urlWithoutScheme.split("/").slice(1);
+  urlPaths.forEach((prefix) => (urlParts.pathPrefixes = [...urlParts.pathPrefixes, prefix]));
 
   // Add the host suffixes
-  urlParts.hostSuffixes = urlWithoutScheme.split(".").slice(0, hostTLDLocation);
+  if (!urlParts.isIPv4) urlParts.hostSuffixes = urlWithoutScheme.split(".").slice(0, hostTLDLocation);
+
+  // Create URL combinations
+  for (let suffixIndex = urlParts.hostSuffixes.length; suffixIndex >= 0; suffixIndex--) {
+    let combination = "";
+
+    combination += urlParts.hostSuffixes.slice(0, suffixIndex).join(".");
+    if (combination && !urlParts.isIPv4) combination += ".";
+
+    combination += `${urlParts.hostTLD}${!urlParts.isIPv4 ? `.${urlParts.eTLD}` : ""}`;
+
+    for (let pathIndex = urlParts.pathPrefixes.length; pathIndex >= 0; pathIndex--) {
+      let pathCombination = urlParts.pathPrefixes.slice(0, pathIndex).join("/");
+      let finalCombination = combination + (pathCombination ? `/${pathCombination}` : "");
+
+      urlCombinations.push(finalCombination);
+    }
+  }
 
   console.log(urlParts);
+  console.log(urlCombinations);
 
   return url;
 };

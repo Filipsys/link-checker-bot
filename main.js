@@ -1,5 +1,5 @@
 import { Client, Collection, Events, GatewayIntentBits, EmbedBuilder } from "discord.js";
-import { formatSavedList, indexSavedList, saveLatestPublicSuffixList, URLCombinations } from "./utils.js";
+import { formatSavedList, hashURL, indexSavedList, saveLatestPublicSuffixList, URLCombinations } from "./utils.js";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import "dotenv/config";
@@ -57,6 +57,12 @@ client.on(Events.MessageCreate, async (message) => {
     const response = await indexSavedList();
 
     await message.channel.send("Done");
+  }
+
+  if (message.content === "%%hash") {
+    const response = await hashURL("https://google.com").then(async (response) => {
+      await message.channel.send(JSON.stringify(response));
+    });
   }
 
   const links = message.content.match(
