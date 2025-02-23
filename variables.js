@@ -1,5 +1,7 @@
 import { join } from "path";
 
+export const workerURL = "https://d1-links.filipsysak.workers.dev";
+
 export const suffixPath = join(process.cwd(), "data/suffixList.txt");
 export const indexedSuffixPath = join(process.cwd(), "data/indexedSuffixList.txt");
 

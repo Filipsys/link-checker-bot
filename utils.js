@@ -4,11 +4,11 @@ import { URISchemes, unofficialURISchemes, suffixPath, indexedSuffixPath } from 
 /**
  * @param {string} url
  * @returns {{
- *   "4bit": string,
- *   "8bit": string,
- *   "16bit": string
+ *   "4byte": string,
+ *   "8byte": string,
+ *   "16byte": string
  * }}
- * @description Returns the hashed first 4-bit, 8-bit & 16-bit values using SHA-256.
+ * @description Returns the hashed first 4-byte, 8-byte & 16-byte values using SHA-256.
  */
 export const hashURL = async (url) => {
   const utf8encoder = new TextEncoder();
@@ -20,9 +20,9 @@ export const hashURL = async (url) => {
   console.log(hash);
 
   return {
-    "4bit": hash.slice(-4),
-    "8bit": hash.slice(-8),
-    "16bit": hash.slice(-16),
+    "4byte": hash.slice(-4),
+    "8byte": hash.slice(-8),
+    "16byte": hash.slice(-16),
   };
 };
 

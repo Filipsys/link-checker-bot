@@ -1,5 +1,6 @@
 import { Client, Collection, Events, GatewayIntentBits, EmbedBuilder } from "discord.js";
 import { formatSavedList, hashURL, indexSavedList, saveLatestPublicSuffixList, URLCombinations } from "./utils.js";
+import { addIntoDB, getFromDB } from "./dbUtils.js";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import "dotenv/config";
