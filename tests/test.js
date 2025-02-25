@@ -6,7 +6,7 @@ import {
   removePercentEscapeSequences,
   removeTrailingLeadingDots,
   removeConsecutiveDots,
-} from "./utils.js";
+} from "../utils.js";
 
 test("Remove all escape characters from url", () => {
   assert.strictEqual(removeEscapeCharacters("http://example.com/\nfoo"), "http://example.com/foo");

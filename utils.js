@@ -1,5 +1,5 @@
 import { writeFile, readFile } from "fs/promises";
-import { URISchemes, unofficialURISchemes, suffixPath, indexedSuffixPath } from "./variables.js";
+import { URISchemes, unofficialURISchemes, suffixPath, indexedSuffixPath } from "./data/variables.js";
 
 /**
  * @param {string} url
@@ -16,8 +16,6 @@ export const hashURL = async (url) => {
   const hash = Array.from(new Uint8Array(hashBuffer))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
-
-  console.log(hash);
 
   return {
     "4byte": hash.slice(-4),
@@ -220,18 +218,6 @@ export const URLCombinations = async (url) => {
   return url;
 };
 
-export const saveLatestPublicSuffixList = async () => {
-  fetch("https://publicsuffix.org/list/public_suffix_list.dat")
-    .then(async (response) => response.text())
-    .then(async (response) => {
-      await writeFile(suffixPath, response);
-
-      await formatSavedList();
-      await indexSavedList();
-    })
-    .catch((error) => console.error("Error encountered: ", error));
-};
-
 export const formatSavedList = async () => {
   const contents = await readFile(suffixPath, { encoding: "utf-8" });
   const lettersCodeMin = 97;
@@ -269,4 +255,16 @@ export const indexSavedList = async () => {
   await writeFile(indexedSuffixPath, JSON.stringify(indexedResults)).catch((error) =>
     console.log("Error encountered: ", error)
   );
+};
+
+export const saveLatestPublicSuffixList = async () => {
+  fetch("https://publicsuffix.org/list/public_suffix_list.dat")
+    .then(async (response) => response.text())
+    .then(async (response) => {
+      await writeFile(suffixPath, response);
+
+      await formatSavedList();
+      await indexSavedList();
+    })
+    .catch((error) => console.error("Error encountered: ", error));
 };

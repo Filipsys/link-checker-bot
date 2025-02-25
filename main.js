@@ -1,8 +1,14 @@
 import { Client, Collection, Events, GatewayIntentBits, EmbedBuilder } from "discord.js";
-import { formatSavedList, hashURL, indexSavedList, saveLatestPublicSuffixList, URLCombinations } from "./utils.js";
-import { addIntoDB, getFromDB } from "./dbUtils.js";
+import {
+  formatSavedList,
+  hashURL,
+  indexSavedList,
+  /*  saveLatestPublicSuffixList, */ URLCombinations,
+} from "./utils.js";
+// import { addIntoDB, getFromDB } from "./db-utils.js";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
+import { resetCache, addIntoCache, checkInCache, removeFromCache } from "./cache-utils.js";
 import "dotenv/config";
 
 const client = new Client({
@@ -15,6 +21,8 @@ client.commands = new Collection();
   const commandFolders = readdirSync(foldersPath);
 
   for (const folder of commandFolders) {
+    if (folder === "deploy-commands.js") return;
+
     const commandsPath = join(foldersPath, folder);
     const commandFiles = readdirSync(commandsPath).filter((file) => file.endsWith(".js"));
 
@@ -64,6 +72,36 @@ client.on(Events.MessageCreate, async (message) => {
     const response = await hashURL("https://google.com").then(async (response) => {
       await message.channel.send(JSON.stringify(response));
     });
+  }
+
+  if (message.content === "%%resetcache") {
+    const response = await resetCache();
+
+    await message.channel.send("Done");
+  }
+
+  if (message.content === "%%addintocache") {
+    await addIntoCache((await hashURL("https://google.com"))["16byte"]).catch((error) => console.error(error));
+
+    await message.channel.send("Done");
+  }
+
+  if (message.content === "%%removefromcache") {
+    await removeFromCache((await hashURL("https://google.com"))["16byte"]).then(async () => {
+      await message.channel.send("Done");
+    });
+  }
+
+  if (message.content === "%%checkcache") {
+    await checkInCache((await hashURL("https://google.com"))["16byte"])
+      .then(async (response) => {
+        if (response) {
+          await message.channel.send("In cache");
+        } else {
+          await message.channel.send("Not in cache");
+        }
+      })
+      .catch((error) => console.error(error));
   }
 
   const links = message.content.match(

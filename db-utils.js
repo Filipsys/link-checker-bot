@@ -1,6 +1,13 @@
-import { workerURL } from "./variables.js";
+import { workerURL } from "./data/variables.js";
 import "dotenv/config";
 
+/**
+ *
+ * @param {string} hash4byte
+ * @param {string} hash8bytes
+ * @param {string} hash16bytes
+ * @returns {{ success: boolean } | null}
+ */
 export const addIntoDB = async (hash4byte, hash8bytes, hash16bytes) => {
   try {
     const response = await fetch(workerURL, {
@@ -27,6 +34,11 @@ export const addIntoDB = async (hash4byte, hash8bytes, hash16bytes) => {
   }
 };
 
+/**
+ *
+ * @param {string} hash4byte
+ * @returns {{ exists: boolean } | null}
+ */
 export const getFromDB = async (hash4byte) => {
   try {
     const response = await fetch(`${workerURL}/get4byte?value=${hash4byte}`, {
